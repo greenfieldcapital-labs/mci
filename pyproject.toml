@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mci"
+version = "1.0"
+description = "Time series forecasting using Dynamic Time Warping"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas",
+    "numpy",
+    "scipy",
+    "fastdtw",
+    "plotly",
+    "tqdm",
+    "optuna",
+    "scikit-learn",
+    "ipywidgets",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mci*"]
