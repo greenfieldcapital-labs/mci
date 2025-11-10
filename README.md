@@ -23,11 +23,20 @@ Key features:
 - Interactive visualizations with Plotly
 - Works with any numeric time series data
 
-## Installation
+## Running Locally
+
+To run the example notebook on your local machine, you'll need [uv](https://docs.astral.sh/uv/) installed.
 
 ```bash
-pip install git+https://github.com/greenfieldcapital-labs/mci.git
+# Clone the repository
+git clone https://github.com/greenfieldcapital-labs/mci.git
+cd mci
+
+# Run the setup and launch Jupyter Lab
+./run.sh
 ```
+
+The script will create a virtual environment, install all dependencies, and open the example notebook in Jupyter Lab.
 
 ## License
 
