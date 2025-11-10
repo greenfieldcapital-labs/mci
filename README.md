@@ -1,6 +1,6 @@
-# MCI - Time Series Forecasting with Dynamic Time Warping
+# MCI - Time Series Simulation with Dynamic Time Warping
 
-A Python package for time series prediction using Dynamic Time Warping (DTW) to identify and leverage similar historical patterns.
+A Python package for time series simulation using Dynamic Time Warping (DTW) to identify and leverage similar historical patterns.
 
 ## Try it Now in Google Colab
 
@@ -11,11 +11,11 @@ A Python package for time series prediction using Dynamic Time Warping (DTW) to 
 The notebook includes:
 - Quick demo with synthetic data
 - Hyperparameter optimization with Optuna
-- Real-world Bitcoin price forecasting example
+- Real-world Bitcoin price simulation example
 
 ## Quick Start
 
-The method identifies historical patterns similar to current data using DTW, then generates predictions by averaging outcomes from the best matches.
+The method identifies historical patterns similar to current data using DTW, then generates simulations by averaging outcomes from the best matches.
 
 Key features:
 - Expanding window analysis for time series
