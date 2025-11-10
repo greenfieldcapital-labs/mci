@@ -7,7 +7,7 @@ from mci.core.dtw import _get_estimates
 from mci.core.minima import find_local_minima_with_separation
 from mci.forecasting.predictions import (
     generate_sudo_predictions_for_frame,
-    get_avg_price_ratios_over_window
+    get_avg_predicted_values_ratios_over_window
 )
 
 
@@ -21,17 +21,17 @@ class TestWorkflowIntegration:
         base_date = datetime(2024, 1, 1)
         dates = [base_date + timedelta(days=i) for i in range(365)]
 
-        # Create realistic price data with trend and seasonality
+        # Create realistic predicted_values data with trend and seasonality
         trend = np.linspace(100, 150, 365)
         seasonality = 10 * np.sin(np.linspace(0, 8*np.pi, 365))
         noise = np.random.randn(365) * 2
-        price = trend + seasonality + noise
+        predicted_values = trend + seasonality + noise
 
         volume = np.random.randint(1000, 5000, 365)
 
         return pd.DataFrame({
             'date': dates,
-            'price': price,
+            'predicted_values': predicted_values,
             'volume': volume
         })
 
@@ -66,15 +66,15 @@ class TestWorkflowIntegration:
                 current_date=current_date,
                 lms=lms,
                 df_line=realistic_data,
-                df_line_col='price',
+                df_line_col='predicted_values',
                 horizon=30,
                 prediction_averaging_range=3
             )
 
             assert isinstance(predictions, list)
             assert len(predictions) == len(lms)
-            assert all('predicted_prices' in p for p in predictions)
-            assert all(len(p['predicted_prices']) == 30 for p in predictions)
+            assert all('predicted_values' in p for p in predictions)
+            assert all(len(p['predicted_values']) == 30 for p in predictions)
 
     def test_estimates_to_minima_pipeline(self, realistic_data):
         """Test pipeline from estimates to local minima."""
@@ -121,7 +121,7 @@ class TestWorkflowIntegration:
             current_date=current_date,
             lms=lms,
             df_line=realistic_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
@@ -156,13 +156,13 @@ class TestWorkflowIntegration:
         # Clean data
         clean_df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 150, 200)
+            'predicted_values': np.linspace(100, 150, 200)
         })
 
         # Noisy data
         noisy_df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 150, 200) + np.random.randn(200) * 10
+            'predicted_values': np.linspace(100, 150, 200) + np.random.randn(200) * 10
         })
 
         clean_estimates = _get_estimates(clean_df, win_size=20)
@@ -210,7 +210,7 @@ class TestWorkflowIntegration:
             current_date=current_date,
             lms=lms,
             df_line=realistic_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
@@ -220,23 +220,23 @@ class TestWorkflowIntegration:
             current_date=current_date,
             lms=lms,
             df_line=realistic_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=60,
             prediction_averaging_range=3
         )
 
         # First 30 predictions should be similar
-        short_prices = pred_short[0]['predicted_prices']
-        long_prices = pred_long[0]['predicted_prices'][:30]
+        short_predicted_values = pred_short[0]['predicted_values']
+        long_predicted_values = pred_long[0]['predicted_values'][:30]
 
         # Allow for some numerical differences
-        valid_indices = [i for i in range(len(short_prices))
-                        if not (np.isnan(short_prices[i]) or np.isnan(long_prices[i]))]
+        valid_indices = [i for i in range(len(short_predicted_values))
+                        if not (np.isnan(short_predicted_values[i]) or np.isnan(long_predicted_values[i]))]
 
         if valid_indices:
             correlation = np.corrcoef(
-                [short_prices[i] for i in valid_indices],
-                [long_prices[i] for i in valid_indices]
+                [short_predicted_values[i] for i in valid_indices],
+                [long_predicted_values[i] for i in valid_indices]
             )[0, 1]
             assert correlation > 0.9 or np.isnan(correlation)
 
@@ -264,7 +264,7 @@ class TestWorkflowIntegration:
 
         minimal_df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 110, 30)
+            'predicted_values': np.linspace(100, 110, 30)
         })
 
         # Should handle minimal data
@@ -280,7 +280,7 @@ class TestWorkflowIntegration:
         est1 = _get_estimates(
             realistic_data,
             win_size=20,
-            normalize=['price', 'volume'],
+            normalize=['predicted_values', 'volume'],
             weights=None
         )
 
@@ -288,7 +288,7 @@ class TestWorkflowIntegration:
         est2 = _get_estimates(
             realistic_data,
             win_size=20,
-            normalize=['price', 'volume'],
+            normalize=['predicted_values', 'volume'],
             weights=[0.8, 0.2]
         )
 

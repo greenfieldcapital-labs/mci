@@ -16,7 +16,7 @@ class TestGenerateSudoPredictionsForFrame:
         dates = [base_date + timedelta(days=i) for i in range(200)]
         df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 200, 200) + np.sin(np.linspace(0, 4*np.pi, 200)) * 10,
+            'predicted_values': np.linspace(100, 200, 200) + np.sin(np.linspace(0, 4*np.pi, 200)) * 10,
         })
         return df
 
@@ -41,7 +41,7 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
@@ -56,16 +56,16 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
 
         for pred in result:
             assert 'lm_date' in pred
-            assert 'predicted_prices' in pred
+            assert 'predicted_values' in pred
             assert 'ratios' in pred
-            assert len(pred['predicted_prices']) == 30
+            assert len(pred['predicted_values']) == 30
             assert len(pred['ratios']) == 30
 
     def test_horizon_length(self, sample_data, sample_lms):
@@ -76,13 +76,13 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=horizon,
             prediction_averaging_range=3
         )
 
         for pred in result:
-            assert len(pred['predicted_prices']) == horizon
+            assert len(pred['predicted_values']) == horizon
             assert len(pred['ratios']) == horizon
 
     def test_empty_lms(self, sample_data):
@@ -94,7 +94,7 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=empty_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
@@ -114,13 +114,13 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=single_lm,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
 
         assert len(result) == 1
-        assert len(result[0]['predicted_prices']) == 30
+        assert len(result[0]['predicted_values']) == 30
 
     def test_current_date_not_in_data(self, sample_data, sample_lms):
         """Test with current_date not in the data."""
@@ -131,7 +131,7 @@ class TestGenerateSudoPredictionsForFrame:
                 current_date=current_date,
                 lms=sample_lms,
                 df_line=sample_data,
-                df_line_col='price',
+                df_line_col='predicted_values',
                 horizon=30,
                 prediction_averaging_range=3
             )
@@ -144,7 +144,7 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=1
         )
@@ -153,14 +153,14 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=5
         )
 
         # Different averaging ranges should produce different predictions
-        pred1 = result1[0]['predicted_prices']
-        pred2 = result2[0]['predicted_prices']
+        pred1 = result1[0]['predicted_values']
+        pred2 = result2[0]['predicted_values']
         # Allow some similarity but they should differ
         assert not np.allclose(pred1, pred2, equal_nan=True) or np.any(np.isnan(pred1))
 
@@ -171,7 +171,7 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
@@ -179,26 +179,26 @@ class TestGenerateSudoPredictionsForFrame:
         for i, pred in enumerate(result):
             assert pred['lm_date'] == sample_lms.iloc[i]['max_date']
 
-    def test_predictions_based_on_current_price(self, sample_data, sample_lms):
-        """Test that predictions are based on current date price."""
+    def test_predictions_based_on_current_predicted_values(self, sample_data, sample_lms):
+        """Test that predictions are based on current date predicted_values."""
         current_date = datetime(2024, 1, 1) + timedelta(days=99)
         result = generate_sudo_predictions_for_frame(
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
 
-        current_price = sample_data[sample_data['date'] == current_date]['price'].iloc[0]
+        current_predicted_values = sample_data[sample_data['date'] == current_date]['predicted_values'].iloc[0]
 
-        # Predicted prices should be related to current price via ratios
+        # Predicted predicted_values should be related to current predicted_values via ratios
         for pred in result:
-            for i, (price, ratio) in enumerate(zip(pred['predicted_prices'], pred['ratios'])):
-                if not np.isnan(price) and not np.isnan(ratio):
-                    expected_price = current_price * ratio
-                    assert np.isclose(price, expected_price, rtol=1e-5)
+            for i, (predicted_values, ratio) in enumerate(zip(pred['predicted_values'], pred['ratios'])):
+                if not np.isnan(predicted_values) and not np.isnan(ratio):
+                    expected_predicted_values = current_predicted_values * ratio
+                    assert np.isclose(predicted_values, expected_predicted_values, rtol=1e-5)
 
     def test_nan_handling(self, sample_data):
         """Test handling of NaN values in predictions."""
@@ -212,7 +212,7 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=late_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=100,  # Extends beyond data
             prediction_averaging_range=3
         )
@@ -221,7 +221,7 @@ class TestGenerateSudoPredictionsForFrame:
         # LM is at day 150, horizon 100 means looking at days 151-250
         # Data only goes to day 199, so days 200-250 should be NaN
         for pred in result:
-            assert any(np.isnan(p) for p in pred['predicted_prices'][-10:])
+            assert any(np.isnan(p) for p in pred['predicted_values'][-10:])
 
     def test_zero_horizon(self, sample_data, sample_lms):
         """Test with horizon of zero."""
@@ -231,7 +231,7 @@ class TestGenerateSudoPredictionsForFrame:
                 current_date=current_date,
                 lms=sample_lms,
                 df_line=sample_data,
-                df_line_col='price',
+                df_line_col='predicted_values',
                 horizon=0,
                 prediction_averaging_range=3
             )
@@ -249,13 +249,13 @@ class TestGenerateSudoPredictionsForFrame:
                 prediction_averaging_range=3
             )
 
-    def test_constant_prices(self, sample_lms):
-        """Test with constant price data."""
+    def test_constant_predicted_values(self, sample_lms):
+        """Test with constant predicted_values data."""
         base_date = datetime(2024, 1, 1)
         dates = [base_date + timedelta(days=i) for i in range(200)]
         df = pd.DataFrame({
             'date': dates,
-            'price': [100] * 200,  # Constant
+            'predicted_values': [100] * 200,  # Constant
         })
 
         current_date = datetime(2024, 1, 1) + timedelta(days=99)
@@ -263,16 +263,16 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=df,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )
 
         # All predictions should be constant (ratio = 1.0)
         for pred in result:
-            non_nan_prices = [p for p in pred['predicted_prices'] if not np.isnan(p)]
-            if non_nan_prices:
-                assert all(np.isclose(p, 100, rtol=0.01) for p in non_nan_prices)
+            non_nan_predicted_values = [p for p in pred['predicted_values'] if not np.isnan(p)]
+            if non_nan_predicted_values:
+                assert all(np.isclose(p, 100, rtol=0.01) for p in non_nan_predicted_values)
 
     def test_large_horizon(self, sample_data, sample_lms):
         """Test with very large horizon."""
@@ -282,13 +282,13 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=sample_lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=horizon,
             prediction_averaging_range=3
         )
 
         for pred in result:
-            assert len(pred['predicted_prices']) == horizon
+            assert len(pred['predicted_values']) == horizon
 
     def test_multiple_lms_ordering(self, sample_data):
         """Test with multiple LMs in different order."""
@@ -306,7 +306,7 @@ class TestGenerateSudoPredictionsForFrame:
             current_date=current_date,
             lms=lms,
             df_line=sample_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=3
         )

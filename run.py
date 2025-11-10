@@ -45,11 +45,8 @@ else:
 
 # %%
 # Import from mci package
-from mci.core.dtw import _get_estimates, _process_window
-from mci.core.minima import find_local_minima_with_separation
 from mci.core import ExpandingWindowConfig, run_expanding_window_analysis
-from mci.forecasting.predictions import get_avg_price_ratios_over_window, generate_sudo_predictions_for_frame
-from mci.visualization.plotting import get_color, plot_result
+from mci.visualization.plotting import plot_result
 from mci.optimization import OptimizationConfig, create_objective, extract_config_from_params
 from mci.data import RandomDataConfig, generate_random_timeseries
 
@@ -72,7 +69,7 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 lm_palette = plotly.colors.qualitative.Safe
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # DTW-Based Time Series Forecasting
+# # DTW-Based Time Series sudo-predictions
 #
 # **Method**: Uses Dynamic Time Warping (DTW) to identify historical patterns similar to current data, then generates predictions by averaging outcomes from top matches.
 #
@@ -127,13 +124,13 @@ print(f"\n✓ Demo complete | Predictions generated for horizon={pred_horizon}")
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
 # # Hyperparameter Optimization
-#
-# **Objective**: Minimize prediction error (MAE) across validation windows
+# ## Suggested for users with at leats basic data science/optization knowledge
+# **Objective**: Minimize prediction error (based on provided metric) across validation windows
 #
 # **Tuning Guidelines**:
-# - `win_length_range`: Start with 5-10% of data length, increase for smoother series
+# - `win_length_range`: Start with 5-10% of data length, increase for smoother series, decrease for more dynamic results
 # - `N_range`: Higher values increase computation but find more diverse patterns
-# - `min_separation`: Use >horizon to ensure independent validation samples
+# - `min_separation`: Higher value lead to sudo-predictions based on diverse samples
 # - `top_k_range`: 3-7 works well; too many dilutes signal
 # - `prediction_averaging_range`: Smooths predictions from similar patterns
 #
@@ -144,7 +141,15 @@ print(f"\n✓ Demo complete | Predictions generated for horizon={pred_horizon}")
 # 4. Increase `n_trials` (line 149) for better convergence
 
 # %%
-# Configure optimization parameters
+# Configure optimization parameters, 
+
+# Error metric, can be eg. MAE, RMSE, DT
+def my_error_metric(avg_pred, actuals):
+    dist, _ = fastdtw(
+                    avg_pred[:, np.newaxis], actuals[:, np.newaxis], dist=euclidean
+                )
+    return dist
+
 config = OptimizationConfig(
     df=df,
     df_line_col="x",  # Column to predict - CHANGE THIS for your data
@@ -155,7 +160,8 @@ config = OptimizationConfig(
     N_range=(1, 31),  # Number of candidates to consider
     min_separation_range=(1, 14),  # Min distance between patterns
     top_k_range=(1, 10),  # How many matches to average
-    prediction_averaging_range=(1, 5)  # Smooth similar predictions
+    prediction_averaging_range=(1, 5),  # Smooth similar predictions
+    error_function=my_error_metric, # Way to calculate error
 )
 
 # Create Optuna study (persists to SQLite for resume capability)
@@ -210,14 +216,14 @@ study.optimize(create_objective(config), n_trials=48, n_jobs=4, show_progress_ba
 # Summary statistics
 completed_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
 if len(completed_trials) > 0:
-    values = [t.value for t in completed_trials]
+    values = [t.value for t in completed_trials if not np.isinf(t.value)]
     print(f"\n{'='*60}")
     print(f"✓ Optimization Complete")
     print(f"{'='*60}")
     print(f"Total trials: {len(completed_trials)}")
-    print(f"Best MAE: {study.best_value:.6f}")
-    print(f"Mean MAE: {np.mean(values):.6f} ± {np.std(values):.6f}")
-    print(f"Worst MAE: {max(values):.6f}")
+    print(f"Best Error: {study.best_value:.6f}")
+    print(f"Mean Error: {np.mean(values):.6f} ± {np.std(values):.6f}")
+    print(f"Worst Error: {max(values):.6f}")
     print(f"Improvement: {((max(values) - study.best_value) / max(values) * 100):.1f}% from worst")
     print(f"{'='*60}\n")
 
@@ -231,7 +237,7 @@ optuna.visualization.plot_optimization_history(study)
 print(f"\n{'='*60}")
 print(f"Best Configuration")
 print(f"{'='*60}")
-print(f"MAE Score: {study.best_value:.6f}")
+print(f"Error Score: {study.best_value:.6f}")
 print(f"\nOptimal Parameters:")
 for key, value in study.best_params.items():
     if isinstance(value, float):
@@ -283,27 +289,24 @@ print(f"✓ Optimized model visualization complete")
 
 
 # %% [markdown] editable=true slideshow={"slide_type": ""}
-# # Production Example: Bitcoin Price Forecasting
+# # Example: Bitcoin Price
 #
 # **Data Requirements**:
 # - CSV with 'date' column (datetime) + numeric features
-# - Sufficient history (recommend >365 days for financial data)
+# - Sufficient history
 # - Regular sampling frequency (daily, hourly, etc.)
 #
-# **Parameter Selection** (pre-optimized for BTC):
+# **Parameter Selection**:
+# ###It is suggested to run optimisation for each new dataset
 # - `window_size=180`: 6-month pattern matching (seasonal cycles)
 # - `N=14`: Two weeks of candidate patterns
 # - `top_k=5`: Average top 5 matches (reduces noise)
 # - `min_separation=14`: 2-week gap (avoids temporal leakage)
 # - `step=60`: Run analysis every 60 days (balances speed/coverage)
 #
-# **Computational Note**: ~1 hour runtime for 2017-present BTC data
-
-# %% [markdown]
-# ### ⚠️ Runtime: ~1 hour for full BTC dataset
 
 # %% editable=true slideshow={"slide_type": ""}
-# Configuration for Bitcoin price forecasting
+# Configuration for Bitcoin price
 win_size = 180  # 6-month lookback
 pred_horizon_btc = 180  # 6-month forecast
 
@@ -315,7 +318,7 @@ df = df[df.date>='2017-01-01']  # Filter to relevant period
 
 print(f"Data loaded: {len(df)} rows from {df.date.min().date()} to {df.date.max().date()}")
 print(f"Columns: {list(df.columns)}")
-print(f"Target: avg_price | Window: {win_size} days | Horizon: {pred_horizon_btc} days\n")
+print(f"Target: avg_predicted_values | Window: {win_size} days | Horizon: {pred_horizon_btc} days\n")
 
 # Run expanding window analysis
 print("▶ Running expanding window analysis (this may take ~1 hour)...")
@@ -331,7 +334,7 @@ res = run_expanding_window_analysis(
 print("✓ Analysis complete | Generating visualization...\n")
 
 # Generate interactive visualization
-frames = plot_result(
+plot_result(
     res,
     df,
     'avg_price',  # Target column - CHANGE for your data
@@ -345,5 +348,5 @@ frames = plot_result(
     transition_duration=150
 )
 
-print(f"✓ Visualization complete | {len(frames)} frames generated")
+print(f"✓ Visualization complete")
 

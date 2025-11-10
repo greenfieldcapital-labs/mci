@@ -31,6 +31,11 @@ def get_color(val):
     return f"rgb({r},{g},{b})"
 
 
+trace_predctions = 'predictions'
+trace_avg_pred = 'avg_prediction'
+trace_local_min = 'local_min'
+
+
 # Animation Prep
 def plot_result(
     df,
@@ -48,9 +53,15 @@ def plot_result(
     title = "Animated distances and sudo prediction lines",
     frame_duration=1e3,
     transition_duration=3e2,
-    show_plot=True
+    add_traces = None
 ):
-
+    if add_traces is None:
+        add_traces = [
+            trace_predctions,
+            trace_avg_pred,
+            trace_local_min
+            
+        ]
     df = df.copy()
     df.dist -= df.dist.min()
     dist_max = df.dist.max()
@@ -86,7 +97,7 @@ def plot_result(
         max_lms = max(max_lms, len(lms_this))
 
     # Calculate y2 range to fit all sudo predictions
-    all_pred_prices = []
+    all_pred_predicted_values = []
     for curr_date in tqdm(current_dates[0::calc_every_nth]):
         lms_this = lms_by_frame.get(curr_date, pd.DataFrame())
         if not lms_this.empty:
@@ -100,9 +111,9 @@ def plot_result(
             df_line_col=df_line_col
         )
         for pred in preds:
-            all_pred_prices.extend([p for p in pred['predicted_prices'] if not np.isnan(p)])
-    if all_pred_prices:
-        y2_range = [min(y2_range[0], min(all_pred_prices)), max(y2_range[1], max(all_pred_prices))]
+            all_pred_predicted_values.extend([p for p in pred['predicted_values'] if not np.isnan(p)])
+    if all_pred_predicted_values:
+        y2_range = [min(y2_range[0], min(all_pred_predicted_values)), max(y2_range[1], max(all_pred_predicted_values))]
 
 
     frames = []
@@ -126,16 +137,16 @@ def plot_result(
                 hovertemplate="Date: %{x|%Y-%m-%d}<br>Match: %{y:.1f}%"
             )
             frame_data.append(sctr)
-        price_line = go.Scatter(
+        predicted_values_line = go.Scatter(
             x=df_line["date"],
             y=df_line[df_line_col],
             mode="lines",
-            line=dict(color="#02FF47", width=4),  # Increased thickness for better readability
+            line=dict(color="#ECECE4", width=4),  # Increased thickness for better readability
             name=f"actual data for {df_line_col}",
             yaxis="y2",
             showlegend=(curr_date == current_dates[0])
         )
-        frame_data.append(price_line)
+        frame_data.append(predicted_values_line)
 
         # Sudo prediction lines and LM markers with matching color
         lms_this_frame = lms_by_frame.get(curr_date, pd.DataFrame())
@@ -174,42 +185,53 @@ def plot_result(
                 legend_name = f"Pred: {lm_date.date()}"
                 line = go.Scatter(
                     x=x_pred,
-                    y=pred['predicted_prices'],
+                    y=pred['predicted_values'],
                     mode="lines",
                     line=dict(color=color, width=2),
                     name=legend_name,
                     yaxis="y2",
                     opacity=0.7,
                     showlegend=False,
-                    hovertemplate=f"Prediction from {lm_date.date()}<br>%{{x}}: %{{y}}"
+                    hovertemplate=f"Prediction from ({idx}): {lm_date.date()}<br>%{{x}}: %{{y}}"
                 )
-                frame_data.append(line)
-                all_pred_arrays.append(pred['predicted_prices'])
-                # LM vertical line ON PRICE (y2)
+                if trace_predctions in add_traces:
+                    frame_data.append(line)
+                all_pred_arrays.append(pred['predicted_values'])
+                # LM vertical line ON predicted_values (y2)
                 lm_row = lms_this_frame.loc[idx]
-                price_at_lm = df_line[df_line["date"] == lm_row["max_date"]][df_line_col]
-                price_val = price_at_lm.iloc[0] if not price_at_lm.empty else y2_range[0]
+                predicted_values_at_lm = df_line[df_line["date"] == lm_row["max_date"]][df_line_col]
+                predicted_values_val = predicted_values_at_lm.iloc[0] if not predicted_values_at_lm.empty else y2_range[0]
                 lm_vline = go.Scatter(
                     x=[lm_row["max_date"], lm_row["max_date"]],
-                    y=[y2_range[0], price_val],
+                    y=y2_range,
                     mode="lines",
                     line=dict(color=color, width=2),
                     name=f"LM {lm_row['max_date'].date()}",
                     yaxis="y2",
                     showlegend=False
                 )
-                frame_data.append(lm_vline)
+                if trace_local_min in add_traces:
+                    frame_data.append(lm_vline)
                 # Add X mark at the top of the line
                 lm_xmark = go.Scatter(
                     x=[lm_row["max_date"]],
-                    y=[price_val],
-                    mode="markers",
-                    marker=dict(color=color, size=14, symbol="x"),
+                    y=[predicted_values_val],
+                    mode="markers+text",  # Combine markers (for rounded box) and text (for number)
+                    marker=dict(
+                        color="white",  # Filled white for the box
+                        size=24,  # Adjust size to control box diameter (larger for bigger box)
+                        symbol="circle",  # Rounded shape
+                        line=dict(color="black", width=1)  # Optional border for definition
+                    ),
+                    text=[str(idx+1)],  # Replace 'number' with actual integer (e.g., 1, 2, ... N); define dynamically
+                    textposition="middle center",  # Center text inside the circle
+                    textfont=dict(color="black", size=14),  # Black for visibility on white; adjust size as needed
                     name=f"LM {lm_row['max_date'].date()}",
                     yaxis="y2",
                     showlegend=False
                 )
-                frame_data.append(lm_xmark)
+                if trace_local_min in add_traces:
+                    frame_data.append(lm_xmark)
             else:
                 pred = predictions[-1]
                 lm_date = lms_this_frame.loc[num_lms-1]['max_date']
@@ -218,42 +240,52 @@ def plot_result(
                 legend_name = f"Pred: {lm_date.date()}"
                 line = go.Scatter(
                     x=x_pred,
-                    y=pred['predicted_prices'],
+                    y=pred['predicted_values'],
                     mode="lines",
                     line=dict(color=color, width=2),
                     name=legend_name,
                     yaxis="y2",
                     opacity=0.7,
                     showlegend=False,
-                    hovertemplate=f"Prediction from {lm_date.date()}<br>%{{x}}: %{{y}}"
+                    hovertemplate=f"Prediction from ({idx}): {lm_date.date()}<br>%{{x}}: %{{y}}"
                 )
-                frame_data.append(line)
-                # all_pred_arrays.append(pred['predicted_prices'])
-                # LM vertical line ON PRICE (y2)
+                if trace_predctions in add_traces:
+                    frame_data.append(line)
+                # all_pred_arrays.append(pred['predicted_values'])
+                # LM vertical line ON predicted_values (y2)
                 lm_row = lms_this_frame.loc[num_lms-1]
-                price_at_lm = df_line[df_line["date"] == lm_row["max_date"]][df_line_col]
-                price_val = price_at_lm.iloc[0] if not price_at_lm.empty else y2_range[0]
+                predicted_values_at_lm = df_line[df_line["date"] == lm_row["max_date"]][df_line_col]
+                predicted_values_val = predicted_values_at_lm.iloc[0] if not predicted_values_at_lm.empty else y2_range[0]
                 lm_vline = go.Scatter(
                     x=[lm_row["max_date"], lm_row["max_date"]],
-                    y=[y2_range[0], price_val],
+                    y=y2_range,
                     mode="lines",
                     line=dict(color=color, width=2),
                     name=f"LM {lm_row['max_date'].date()}",
                     yaxis="y2",
                     showlegend=False
                 )
-                frame_data.append(lm_vline)
-                # Add X mark at the top of the line
+                if trace_local_min in add_traces:
+                    frame_data.append(lm_vline)
                 lm_xmark = go.Scatter(
                     x=[lm_row["max_date"]],
-                    y=[price_val],
-                    mode="markers",
-                    marker=dict(color=color, size=14, symbol="x"),
+                    y=[predicted_values_val],
+                    mode="markers+text",  # Combine markers (for rounded box) and text (for number)
+                    marker=dict(
+                        color="white",  # Filled white for the box
+                        size=24,  # Adjust size to control box diameter (larger for bigger box)
+                        symbol="circle",  # Rounded shape
+                        line=dict(color="black", width=1)  # Optional border for definition
+                    ),
+                    text=[str(idx+1)],  # Replace 'number' with actual integer (e.g., 1, 2, ... N); define dynamically
+                    textposition="middle center",  # Center text inside the circle
+                    textfont=dict(color="black", size=14),  # Black for visibility on white; adjust size as needed
                     name=f"LM {lm_row['max_date'].date()}",
                     yaxis="y2",
                     showlegend=False
                 )
-                frame_data.append(lm_xmark)
+                if trace_local_min in add_traces:
+                    frame_data.append(lm_xmark)
 
 
         # --- NEW: Add average forecast line ---
@@ -285,7 +317,8 @@ def plot_result(
                 opacity=1.0,
                 showlegend=False
             )
-            frame_data.append(avg_line)
+            if trace_avg_pred in add_traces:
+                frame_data.append(avg_line)
         else:
             placeholder_avg = go.Scatter(
                 x=[],
@@ -296,14 +329,15 @@ def plot_result(
                 visible=False,
                 showlegend=False
             )
-            frame_data.append(placeholder_avg)
+            if trace_avg_pred in add_traces:
+                frame_data.append(placeholder_avg)
 
 
-        price_at_curr = df_line[df_line["date"] == curr_date][df_line_col]
+        predicted_values_at_curr = df_line[df_line["date"] == curr_date][df_line_col]
         curr_vline = go.Scatter()
         x_marker = go.Scatter()
-        if not price_at_curr.empty:
-            price_val = price_at_curr.iloc[0]
+        if not predicted_values_at_curr.empty:
+            predicted_values_val = predicted_values_at_curr.iloc[0]
             # Vertical line for current date spanning entire y2
             curr_vline = go.Scatter(
                 x=[curr_date, curr_date],
@@ -317,15 +351,15 @@ def plot_result(
             # X marker
             x_marker = go.Scatter(
                 x=[curr_date],
-                y=[price_val],
+                y=[predicted_values_val],
                 mode="markers",
                 marker=dict(color="#02FF47", size=18, symbol="x"),
-                name="Current Date (Price)",
+                name="Current Date (predicted_values)",
                 yaxis="y2",
                 showlegend=False
             )
         else:
-            # Placeholders if no current price (unlikely, but to keep consistent)
+            # Placeholders if no current predicted_values (unlikely, but to keep consistent)
             curr_vline = go.Scatter(
                 x=[],
                 y=[],
@@ -349,22 +383,24 @@ def plot_result(
 
 
     init_data = frames[0].data
-
+    axis_label_size = 18
     layout = go.Layout(
         title=dict(
             text=title,
-            font=dict(color="white", size=16)  # Slightly larger font for readability
+            font=dict(color="white", size=16),  # Slightly larger font for readability
+            x=0.5,      # Center the title horizontally
+            xanchor='center'  # Anchor to center
         ),
         showlegend=False,
         xaxis=dict(
             title=dict(
-                text="max_date / d",
-                font=dict(color="white", size=14),
+                text="Date", 
+                font=dict(color="white", size=axis_label_size),
                 standoff=40  # Increase distance from tick labels to prevent overlap (adjust if needed)
             ),
             range=x_range,
-            tickfont=dict(color="white", size=12),
-            gridcolor="#333333",
+            tickfont=dict(color="white", size=axis_label_size),
+            gridcolor="#333333",  
             gridwidth=1,
             zerolinecolor="#333333"
         ),
@@ -372,8 +408,8 @@ def plot_result(
             title=dict(text="Match (%)", font=dict(color="white", size=14)),
             side="left",
             range=y1_range,
-            tickfont=dict(color="white", size=12),
-            gridcolor="#333333",
+            tickfont=dict(color="white", size=axis_label_size),
+            gridcolor="#333333",  
             gridwidth=1,
             zerolinecolor="#333333"
         ),
@@ -381,14 +417,14 @@ def plot_result(
             title=dict(text=df_line_col, font=dict(color="white", size=14)),
             overlaying="y",
             side="right",
-            showgrid=False,
+            showgrid=False,  
             range=y2_range,
-            tickfont=dict(color="white", size=12),
+            tickfont=dict(color="white", size=axis_label_size),
             zerolinecolor="#333333"
         ),
         paper_bgcolor="#121212",
         plot_bgcolor="#121212",
-        font=dict(color="white", size=12),
+        font=dict(color="white", size=12),  
         margin=dict(b=200),  # Expand bottom margin for space below the plot (adjust as needed)
         updatemenus=[{
             "type": "buttons",
@@ -446,14 +482,12 @@ def plot_result(
             len=1           # Full width; set to 0.9 for slightly shorter if preferred
         )]
     )
-
-
+    
+    
     fig = go.Figure(
         data=init_data,
         layout=layout,
         frames=frames
     )
     fig.update_layout(width=1024*1.5, height=1024/2)
-
-    if show_plot:
-        fig.show()
+    fig.show()

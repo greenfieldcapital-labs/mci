@@ -126,7 +126,7 @@ def create_objective(config: OptimizationConfig) -> Callable[[Trial], float]:
 
         # Collect squared errors and DTW distances across all predictions
         squared_errors = []
-        dtw_distances = []
+        errors = []
 
         for current_idx in range(min_current_idx, len(df) - horizon, calc_every_n):
             history_df = df.iloc[: current_idx + 1]
@@ -174,8 +174,8 @@ def create_objective(config: OptimizationConfig) -> Callable[[Trial], float]:
             except Exception:
                 return np.inf
 
-            # Collect all predicted price arrays
-            all_pred_arrays = [pred["predicted_prices"] for pred in predictions]
+            # Collect all predicted values arrays
+            all_pred_arrays = [pred["predicted_values"] for pred in predictions]
             arr = np.array(all_pred_arrays)  # shape: [n_preds, horizon]
 
             # For weights: use inverse dist (lower dist = higher weight)
@@ -199,26 +199,16 @@ def create_objective(config: OptimizationConfig) -> Callable[[Trial], float]:
                 .values
             )
 
-            # Collect squared errors for all valid predicted values until +horizon
-            for i in range(max_pred_length):
-                if not np.isnan(avg_pred[i]):
-                    squared_errors.append((avg_pred[i] - actuals[i]) ** 2)
-
             try:
-                dist, _ = fastdtw(
-                    avg_pred[:, np.newaxis], actuals[:, np.newaxis], dist=euclidean
-                )
-                dist = dist / win_length
-                dtw_distances.append(dist)
+                errors.append(config.error_function(
+                    avg_pred, actuals
+                ))
             except Exception:
                 return np.inf
 
-        if not squared_errors:
+        if not errors:
             return np.inf  # No valid predictions
 
-        # Average RMSE over all individual prediction points
-        # avg_rmse = np.sqrt(np.mean(squared_errors))
-
-        return np.mean(dtw_distances)  # or avg_rmse
+        return np.mean(errors) 
 
     return objective

@@ -16,7 +16,7 @@ class TestGetEstimates:
         dates = [base_date + timedelta(days=i) for i in range(50)]
         df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 150, 50) + np.sin(np.linspace(0, 4*np.pi, 50)) * 10,
+            'predicted_values': np.linspace(100, 150, 50) + np.sin(np.linspace(0, 4*np.pi, 50)) * 10,
             'volume': np.linspace(1000, 2000, 50) + np.random.randn(50) * 50,
         })
         return df
@@ -66,7 +66,7 @@ class TestGetEstimates:
         result = _get_estimates(
             sample_data,
             win_size=10,
-            normalize=['price']
+            normalize=['predicted_values']
         )
 
         assert isinstance(result, pd.DataFrame)
@@ -77,7 +77,7 @@ class TestGetEstimates:
         result = _get_estimates(
             sample_data,
             win_size=10,
-            normalize=['price', 'volume'],
+            normalize=['predicted_values', 'volume'],
             weights=[0.7, 0.3]
         )
 
@@ -89,14 +89,14 @@ class TestGetEstimates:
         result1 = _get_estimates(
             sample_data,
             win_size=10,
-            normalize=['price', 'volume'],
+            normalize=['predicted_values', 'volume'],
             weights=[1.0, 1.0]
         )
 
         result2 = _get_estimates(
             sample_data,
             win_size=10,
-            normalize=['price', 'volume'],
+            normalize=['predicted_values', 'volume'],
             weights=[2.0, 0.5]
         )
 
@@ -118,7 +118,7 @@ class TestGetEstimates:
         dates = [base_date + timedelta(days=i) for i in range(50)]
         df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 150, 50),
+            'predicted_values': np.linspace(100, 150, 50),
             'sparse_data': [np.nan] * 45 + [1, 2, 3, 4, 5],  # Mostly NaN
         })
 
@@ -133,7 +133,7 @@ class TestGetEstimates:
         dates = [base_date + timedelta(days=i) for i in range(50)]
         df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 150, 50) + np.sin(np.linspace(0, 4*np.pi, 50)) * 10,
+            'predicted_values': np.linspace(100, 150, 50) + np.sin(np.linspace(0, 4*np.pi, 50)) * 10,
         })
 
         result = _get_estimates(df, win_size=10)
@@ -147,7 +147,7 @@ class TestGetEstimates:
         dates = [base_date + timedelta(days=i) for i in range(50)]
         df = pd.DataFrame({
             'date': dates,
-            'price': [100] * 50,  # Constant
+            'predicted_values': [100] * 50,  # Constant
             'volume': [1000] * 50,  # Constant
         })
 
@@ -162,7 +162,7 @@ class TestGetEstimates:
         dates = [base_date + timedelta(days=i) for i in range(15)]
         df = pd.DataFrame({
             'date': dates,
-            'price': [np.nan] * 15,  # All NaN
+            'predicted_values': [np.nan] * 15,  # All NaN
         })
 
         result = _get_estimates(df, win_size=10)

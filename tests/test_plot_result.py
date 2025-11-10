@@ -37,7 +37,7 @@ class TestPlotResult:
         dates = [base_date + timedelta(days=i) for i in range(200)]
         df = pd.DataFrame({
             'date': dates,
-            'price': np.linspace(100, 200, 200) + np.sin(np.linspace(0, 4*np.pi, 200)) * 10,
+            'predicted_values': np.linspace(100, 200, 200) + np.sin(np.linspace(0, 4*np.pi, 200)) * 10,
         })
         return df
 
@@ -48,7 +48,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             N=14,
             min_separation=7,
@@ -67,7 +67,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             show_scatter=False,
             calc_every_nth=5,
@@ -83,7 +83,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             calc_every_nth=3,
             show_plot=False
@@ -98,7 +98,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             title=custom_title,
             calc_every_nth=5,
@@ -112,7 +112,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             frame_duration=500,
             calc_every_nth=10,
@@ -126,7 +126,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             transition_duration=200,
             calc_every_nth=10,
@@ -140,7 +140,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             top_k=3,
             calc_every_nth=10,
@@ -155,7 +155,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=180,
             calc_every_nth=10,
             show_plot=False
@@ -168,7 +168,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=10,
             calc_every_nth=10,
             show_plot=False
@@ -181,7 +181,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             min_separation=14,
             calc_every_nth=10,
@@ -195,7 +195,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             N=20,
             calc_every_nth=10,
@@ -209,7 +209,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             prediction_averaging_range=5,
             calc_every_nth=10,
@@ -238,7 +238,7 @@ class TestPlotResult:
             plot_result(
                 df=empty_df,
                 df_line=sample_line_data,
-                df_line_col='price',
+                df_line_col='predicted_values',
                 horizon=30,
                 calc_every_nth=1,
             show_plot=False
@@ -260,7 +260,7 @@ class TestPlotResult:
         result = plot_result(
             df=single_frame_df,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             calc_every_nth=1,
             show_plot=False
@@ -277,7 +277,7 @@ class TestPlotResult:
         result = plot_result(
             df=sample_distances.copy(),
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             calc_every_nth=10,
             show_plot=False
@@ -303,7 +303,7 @@ class TestPlotResult:
         result = plot_result(
             df=constant_df,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             calc_every_nth=1,
             show_plot=False
@@ -330,7 +330,7 @@ class TestPlotResult:
         result = plot_result(
             df=unsorted_df,
             df_line=sample_line_data,
-            df_line_col='price',
+            df_line_col='predicted_values',
             horizon=30,
             calc_every_nth=10,
             show_plot=False

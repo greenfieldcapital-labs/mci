@@ -23,6 +23,7 @@ class OptimizationConfig:
         min_separation_range: (min, max) range for minimum separation between local minima.
         top_k_range: (min, max) range for top K local minima to use.
         prediction_averaging_range: (min, max) range for prediction averaging window.
+        error_function: callable(avg_pred, actuals) -> float, method to calculate error/prediciton accuracy
     """
 
     # Data configuration
@@ -40,6 +41,8 @@ class OptimizationConfig:
     min_separation_range: tuple[int, int] = (1, 14)
     top_k_range: tuple[int, int] = (1, 10)
     prediction_averaging_range: tuple[int, int] = (1, 5)
+
+    error_function: callable
 
     def __post_init__(self) -> None:
         """Set defaults and validate configuration."""

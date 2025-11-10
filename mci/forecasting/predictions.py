@@ -3,10 +3,10 @@ import numpy as np
 import warnings
 
 
-def get_avg_price_ratios_over_window(df_line, center_date, range_days, horizon, df_line_col):
+def get_avg_predicted_values_ratios_over_window(df_line, center_date, range_days, horizon, df_line_col):
     """
     For all dates in [center_date - range_days, center_date + range_days], compute
-    price ratios up to horizon, and average them at each offset.
+    ratios up to horizon, and average them at each offset.
     """
     if horizon <= 0:
         raise ValueError("horizon must be positive")
@@ -16,7 +16,7 @@ def get_avg_price_ratios_over_window(df_line, center_date, range_days, horizon, 
         base_row = df_line[df_line['date'] == d]
         if base_row.empty:
             continue
-        base_price = base_row[df_line_col].iloc[0]
+        base_value = base_row[df_line_col].iloc[0]
         ratios = []
         for k in range(1, horizon+1):
             future_date = d + pd.Timedelta(days=k)
@@ -24,7 +24,7 @@ def get_avg_price_ratios_over_window(df_line, center_date, range_days, horizon, 
             if future_row.empty:
                 ratios.append(np.nan)
             else:
-                ratios.append(future_row[df_line_col].iloc[0] / base_price)
+                ratios.append(future_row[df_line_col].iloc[0] / base_value)
         ratio_matrix.append(ratios)
     if len(ratio_matrix) == 0:
         return [np.nan] * horizon
@@ -36,20 +36,20 @@ def get_avg_price_ratios_over_window(df_line, center_date, range_days, horizon, 
 def generate_sudo_predictions_for_frame(current_date, lms, df_line, df_line_col, horizon=62, prediction_averaging_range=3):
     base_row = df_line[df_line['date'] == current_date]
     if base_row.empty:
-        base_price = np.nan
+        base_value = np.nan
     else:
-        base_price = base_row[df_line_col].iloc[0]
+        base_value = base_row[df_line_col].iloc[0]
 
-    assert not np.isnan(base_price)
+    assert not np.isnan(base_value), f'Cannot find value for date = {current_date}'
     predictions = []
     for _, row in lms.iterrows():
-        avg_ratios = get_avg_price_ratios_over_window(
+        avg_ratios = get_avg_predicted_values_ratios_over_window(
             df_line, row['max_date'], prediction_averaging_range, horizon, df_line_col
         )
-        predicted_prices = [base_price * r if not np.isnan(r) else np.nan for r in avg_ratios]
+        predicted_values = [base_value * r if not np.isnan(r) else np.nan for r in avg_ratios]
         predictions.append({
             'lm_date': row['max_date'],
-            'predicted_prices': predicted_prices,
+            'predicted_values': predicted_values,
             'ratios': avg_ratios
         })
     return predictions

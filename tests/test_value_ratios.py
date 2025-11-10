@@ -1,13 +1,13 @@
-"""Tests for get_avg_price_ratios_over_window function."""
+"""Tests for get_avg_predicted_values_ratios_over_window function."""
 import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from mci.forecasting.predictions import get_avg_price_ratios_over_window
+from mci.forecasting.predictions import get_avg_predicted_values_ratios_over_window
 
 
-class TestGetAvgPriceRatiosOverWindow:
-    """Test suite for get_avg_price_ratios_over_window function."""
+class TestGetAvgValueRatiosOverWindow:
+    """Test suite for get_avg_predicted_values_ratios_over_window function."""
 
     @pytest.fixture
     def sample_data(self):
@@ -23,7 +23,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_basic_ratio_calculation(self, sample_data):
         """Test basic ratio calculation."""
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=3,
@@ -40,7 +40,7 @@ class TestGetAvgPriceRatiosOverWindow:
         """Test that result has correct horizon length."""
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
         horizon = 30
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=5,
@@ -53,7 +53,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_zero_range_days(self, sample_data):
         """Test with zero range_days (single date)."""
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=0,
@@ -68,7 +68,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_center_date_not_in_data(self, sample_data):
         """Test with center date not in the data."""
         center_date = datetime(2025, 1, 1)  # Future date
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=3,
@@ -82,7 +82,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_horizon_beyond_data(self, sample_data):
         """Test when horizon extends beyond available data."""
         center_date = datetime(2024, 1, 1) + timedelta(days=149)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=3,
@@ -104,7 +104,7 @@ class TestGetAvgPriceRatiosOverWindow:
         })
 
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=df,
             center_date=center_date,
             range_days=3,
@@ -118,7 +118,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_range_days_larger_than_data(self, sample_data):
         """Test with range_days larger than available data."""
         center_date = datetime(2024, 1, 10)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=500,
@@ -134,7 +134,7 @@ class TestGetAvgPriceRatiosOverWindow:
         """Test error handling with invalid horizon."""
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
         with pytest.raises((ValueError, IndexError)):
-            get_avg_price_ratios_over_window(
+            get_avg_predicted_values_ratios_over_window(
                 df_line=sample_data,
                 center_date=center_date,
                 range_days=3,
@@ -145,7 +145,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_single_day_horizon(self, sample_data):
         """Test with horizon of 1 day."""
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=3,
@@ -160,7 +160,7 @@ class TestGetAvgPriceRatiosOverWindow:
         """Test with non-existent column name."""
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
         with pytest.raises(KeyError):
-            get_avg_price_ratios_over_window(
+            get_avg_predicted_values_ratios_over_window(
                 df_line=sample_data,
                 center_date=center_date,
                 range_days=3,
@@ -173,7 +173,7 @@ class TestGetAvgPriceRatiosOverWindow:
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
 
         # Single date result
-        result_single = get_avg_price_ratios_over_window(
+        result_single = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=0,
@@ -182,7 +182,7 @@ class TestGetAvgPriceRatiosOverWindow:
         )
 
         # Window result
-        result_window = get_avg_price_ratios_over_window(
+        result_window = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=10,
@@ -208,7 +208,7 @@ class TestGetAvgPriceRatiosOverWindow:
         })
 
         center_date = datetime(2024, 1, 2)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=df,
             center_date=center_date,
             range_days=1,
@@ -230,7 +230,7 @@ class TestGetAvgPriceRatiosOverWindow:
         })
 
         center_date = datetime(2024, 1, 1) + timedelta(days=49)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=df,
             center_date=center_date,
             range_days=3,
@@ -244,7 +244,7 @@ class TestGetAvgPriceRatiosOverWindow:
     def test_large_range_days(self, sample_data):
         """Test with large range_days."""
         center_date = datetime(2024, 1, 1) + timedelta(days=99)
-        result = get_avg_price_ratios_over_window(
+        result = get_avg_predicted_values_ratios_over_window(
             df_line=sample_data,
             center_date=center_date,
             range_days=50,
