@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mci"
-version = "0.1.0"
+version = "1.2"
 description = "Time series forecasting using Dynamic Time Warping"
 requires-python = ">=3.9"
 dependencies = [
