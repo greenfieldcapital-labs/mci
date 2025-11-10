@@ -49,7 +49,7 @@ echo ""
 
 # Step 6: Generate Colab link
 echo "🔗 Colab Link:"
-echo "https://colab.research.google.com/github/greenfieldcapital-labs/mci/blob/package-for-colab/example.ipynb"
+echo "https://colab.research.google.com/github/greenfieldcapital-labs/mci/blob/release-v1/example.ipynb"
 echo ""
 
 echo "✅ Deployment complete! Test in Colab using the link above."
