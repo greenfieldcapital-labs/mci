@@ -32,12 +32,12 @@ IN_COLAB = 'google.colab' in sys.modules
 
 if IN_COLAB:
     print("📦 Installing mci package from GitHub...")
-    # Install mci package from GitHub repository
-    # !pip install -q git+https://github.com/greenfieldcapital-labs/mci.git
+    # Install mci package from GitHub repository (release-v1 branch)
+    !pip install -q git+https://github.com/greenfieldcapital-labs/mci.git@release-v1
 
     print("📥 Downloading Bitcoin dataset...")
     # Download data from GitHub raw content
-    # !wget -q https://raw.githubusercontent.com/greenfieldcapital-labs/mci/main/data/bitcoin_prices.csv -P data/
+    !wget -q https://raw.githubusercontent.com/greenfieldcapital-labs/mci/release-v1/data/bitcoin_prices.csv -P data/
 
     print("✅ Setup complete! You can now run all cells below.")
 else:

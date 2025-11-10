@@ -1,0 +1,34 @@
+# MCI - Time Series Forecasting with Dynamic Time Warping
+
+A Python package for time series prediction using Dynamic Time Warping (DTW) to identify and leverage similar historical patterns.
+
+## Try it Now in Google Colab
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/greenfieldcapital-labs/mci/blob/main/example.ipynb)
+
+**Click the badge above to run the interactive example in your browser - no installation required!**
+
+The notebook includes:
+- Quick demo with synthetic data
+- Hyperparameter optimization with Optuna
+- Real-world Bitcoin price forecasting example
+
+## Quick Start
+
+The method identifies historical patterns similar to current data using DTW, then generates predictions by averaging outcomes from the best matches.
+
+Key features:
+- Expanding window analysis for time series
+- Automated hyperparameter tuning
+- Interactive visualizations with Plotly
+- Works with any numeric time series data
+
+## Installation
+
+```bash
+pip install git+https://github.com/greenfieldcapital-labs/mci.git
+```
+
+## License
+
+See [LICENSE](LICENSE) file for details.
