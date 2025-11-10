@@ -8,6 +8,8 @@ A Python package for time series simulation using Dynamic Time Warping (DTW) to 
 
 **Click the badge above to run the interactive example in your browser - no installation required!**
 
+*Note: A Google account is required to run notebooks in Colab.*
+
 The notebook includes:
 - Quick demo with synthetic data
 - Hyperparameter optimization with Optuna
