@@ -33,7 +33,7 @@ git clone https://github.com/greenfieldcapital-labs/mci.git
 cd mci
 
 # Run the setup and launch Jupyter Lab
-./run.sh
+./run_local.sh
 ```
 
 The script will create a virtual environment, install all dependencies, and open the example notebook in Jupyter Lab.
