@@ -33,11 +33,11 @@ IN_COLAB = 'google.colab' in sys.modules
 if IN_COLAB:
     print("📦 Installing mci package from GitHub...")
     # Install mci package from GitHub repository
-    !pip install -q git+https://github.com/greenfieldcapital-labs/mci.git
+    # !pip install -q git+https://github.com/greenfieldcapital-labs/mci.git
 
     print("📥 Downloading Bitcoin dataset...")
     # Download data from GitHub raw content
-    !wget -q https://raw.githubusercontent.com/greenfieldcapital-labs/mci/main/data/bitcoin_prices.csv -P data/
+    # !wget -q https://raw.githubusercontent.com/greenfieldcapital-labs/mci/main/data/bitcoin_prices.csv -P data/
 
     print("✅ Setup complete! You can now run all cells below.")
 else:
@@ -252,7 +252,7 @@ print(f"{'='*60}\n")
 # Re-run analysis using best configuration from optimization.
 # This generates predictions at higher temporal resolution (calc_every_nth=5) for detailed visualization.
 
-# %% scrolled=false
+# %%
 best_params = study.best_params
 
 # Extract configuration from best trial

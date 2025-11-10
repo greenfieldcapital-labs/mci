@@ -1,4 +1,3 @@
-*.ipynb
 .ipynb_checkpoints/
 mci.egg-info/
 optuna_study.db
